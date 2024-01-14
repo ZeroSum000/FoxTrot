@@ -59,16 +59,16 @@ def reliable_completion_request(messages, functions=None, model="gpt-3.5-turbo-0
             log(DEBUG_LEVEL_MIN, f'  [openai] Failed to connect to OpenAI API: {str(e)}') 
 
         # these as quite fatal so we leave because retry won't change much
-        except openai.error.RateLimitError as e:
+        except openai.RateLimitError as e:
             log(DEBUG_LEVEL_ERR, f'  [openai] OpenAI API request exceeded rate limit: {str(e)}')
             raise e
-        except openai.error.InvalidRequestError as e:
+        except openai.InvalidRequestError as e:
             log(DEBUG_LEVEL_ERR, f'  [openai] Invalid request to OpenAI API: {str(e)}')
             raise e
-        except openai.error.AuthenticationError as e:
+        except openai.AuthenticationError as e:
             log(DEBUG_LEVEL_ERR, f'  [openai] Authentication error with OpenAI API: {str(e)}')
             raise e
-        except openai.error.PermissionError as e:
+        except openai.PermissionError as e:
             log(DEBUG_LEVEL_ERR, f'  [openai] API request was not permitted: {str(e)}')
             raise e
 
