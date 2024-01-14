@@ -7,8 +7,10 @@ import json
 import traceback
 import time
 import openai
+from openai import OpenAI
+ 
+client = OpenAI(api_key=cfg("api_key", env_key="OPENAI_API_KEY"))
 
-openai.api_key = cfg("api_key", env_key="OPENAI_API_KEY")
 init_model = cfg("gpt_model", default="gpt-3.5-turbo-0613")
 max_model = cfg("gpt_max_model", default="gpt-3.5-turbo-0613")
 llm_temperature = float(cfg("default_temperature"))
@@ -37,7 +39,8 @@ def chat_completion_request(messages, functions=None, model="gpt-3.5-turbo-0613"
     params.update({"request_timeout": timeout})        
     
     log(DEBUG_LEVEL_MAX, '  ->{}'.format(json.dumps(params, indent=4)))
-    return openai.ChatCompletion.create(**params) # https://platform.openai.com/docs/api-reference/completions
+    return client.chat.completions.create(**params) # https://platform.openai.com/docs/api-reference/completions
+
 
 def reliable_completion_request(messages, functions=None, model="gpt-3.5-turbo-0613", init_timeout = min_timeout):
 
@@ -46,13 +49,13 @@ def reliable_completion_request(messages, functions=None, model="gpt-3.5-turbo-0
             return chat_completion_request(messages, functions, model, init_timeout)
         
         # we perform retries for any of these:
-        except openai.error.APIError as e:
+        except openai.APIError as e:
             log(DEBUG_LEVEL_MIN, f'  [openai] API returned an API Error: {str(e)}')
-        except openai.error.Timeout as e:
+        except openai.Timeout as e:
             log(DEBUG_LEVEL_MIN, f'  [openai] OpenAI API request timed out: {str(e)}')
-        except openai.error.ServiceUnavailableError as e:
+        except openai.ServiceUnavailableError as e:
             log(DEBUG_LEVEL_MIN, f'  [openai] OpenAI API service unavailable: {str(e)}')
-        except openai.error.APIConnectionError as e: # (?) not sure about retrying on this one
+        except openai.APIConnectionError as e: # (?) not sure about retrying on this one
             log(DEBUG_LEVEL_MIN, f'  [openai] Failed to connect to OpenAI API: {str(e)}') 
 
         # these as quite fatal so we leave because retry won't change much
